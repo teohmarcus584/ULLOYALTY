@@ -11,7 +11,6 @@
             box-sizing: border-box;
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
-
         body {
             background: linear-gradient(145deg, #f0f5fb 0%, #e9f0f8 100%);
             min-height: 100vh;
@@ -20,7 +19,6 @@
             align-items: center;
             padding: 1.5rem;
         }
-
         .portal-card {
             max-width: 620px;
             width: 100%;
@@ -30,34 +28,28 @@
             box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25), 0 8px 18px rgba(0, 0, 0, 0.05);
             overflow: hidden;
         }
-
         .brand-header {
             background: #1e2f3e;
             padding: 1.8rem 2rem;
             color: white;
             text-align: center;
         }
-
         .brand-header h1 {
             font-size: 1.8rem;
             font-weight: 600;
             letter-spacing: -0.3px;
             margin-bottom: 0.3rem;
         }
-
         .brand-header p {
             opacity: 0.8;
             font-size: 0.9rem;
         }
-
         .content-pane {
             padding: 2rem 2rem 2rem 2rem;
         }
-
         .form-group {
             margin-bottom: 1.3rem;
         }
-
         label {
             display: block;
             font-weight: 600;
@@ -65,7 +57,6 @@
             margin-bottom: 0.45rem;
             color: #1e2f3e;
         }
-
         input {
             width: 100%;
             padding: 0.9rem 1rem;
@@ -76,12 +67,10 @@
             transition: 0.2s;
             outline: none;
         }
-
         input:focus {
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
         }
-
         button {
             background: #1e2f3e;
             color: white;
@@ -95,33 +84,27 @@
             width: 100%;
             margin-top: 0.5rem;
         }
-
         button:hover {
             background: #0f1e2a;
             transform: translateY(-1px);
         }
-
         .secondary-btn {
             background: #eef2ff;
             color: #1e2f3e;
             border: 1px solid #cbd5e1;
         }
-
         .secondary-btn:hover {
             background: #e2e8f0;
             transform: none;
         }
-
         .danger-btn {
             background: #fff1f0;
             color: #b91c1c;
             border: 1px solid #fecaca;
         }
-
         .danger-btn:hover {
             background: #fee2e2;
         }
-
         .alert {
             background: #fef9e3;
             border-left: 5px solid #f59e0b;
@@ -131,19 +114,16 @@
             font-size: 0.85rem;
             color: #92400e;
         }
-
         .error-box {
             background: #fee2e2;
             border-left-color: #dc2626;
             color: #991b1b;
         }
-
         .success-box {
             background: #e0f2fe;
             border-left-color: #0ea5e9;
             color: #075985;
         }
-
         .dashboard-section {
             background: #f8fafc;
             border-radius: 1.5rem;
@@ -151,7 +131,6 @@
             margin-bottom: 1.6rem;
             border: 1px solid #e9edf2;
         }
-
         .points-badge {
             background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             display: inline-block;
@@ -161,7 +140,6 @@
             font-size: 1.3rem;
             color: #2c2c2c;
         }
-
         .points-label {
             font-size: 0.8rem;
             font-weight: 500;
@@ -169,13 +147,11 @@
             letter-spacing: 1px;
             color: #475569;
         }
-
         .history-list {
             max-height: 380px;
             overflow-y: auto;
             margin-top: 0.8rem;
         }
-
         .purchase-item {
             background: white;
             border-radius: 1.2rem;
@@ -187,22 +163,18 @@
             align-items: center;
             flex-wrap: wrap;
         }
-
         .product-info {
             flex: 2;
         }
-
         .product-name {
             font-weight: 700;
             color: #0f172a;
         }
-
         .product-meta {
             font-size: 0.7rem;
             color: #64748b;
             margin-top: 0.2rem;
         }
-
         .product-total {
             font-weight: 700;
             color: #0f172a;
@@ -211,40 +183,33 @@
             border-radius: 2rem;
             font-size: 0.85rem;
         }
-
         hr {
             margin: 1rem 0;
             border: none;
             border-top: 1px solid #e2e8f0;
         }
-
         .flex-btns {
             display: flex;
             gap: 0.8rem;
             margin-top: 1rem;
         }
-
         .flex-btns button {
             margin-top: 0;
             width: auto;
             flex: 1;
         }
-
         .hidden {
             display: none;
         }
-
         .text-center {
             text-align: center;
         }
-
         .welcome-msg {
             font-size: 1.1rem;
             font-weight: 600;
             color: #1e2f3e;
             margin-bottom: 1rem;
         }
-
         footer {
             background: #f1f5f9;
             padding: 1rem;
@@ -271,111 +236,74 @@
 </div>
 
 <script>
-    // ==================== BACKEND URL (YOUR APPS SCRIPT WEB APP) ====================
     const API_BASE = "https://script.google.com/macros/s/AKfycbxeXlDy7Bo-BpGuHRhNx-YU9jldr7Jf7H1RmvuJ29wRgB0xNtMsl0NOno0pervg0QQGOg/exec";
 
-    // Helper: universal request to backend (supports GET/POST)
     async function callApi(action, method = 'GET', params = {}) {
         let url = `${API_BASE}?action=${action}`;
-        const options = {
-            method: method,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        };
+        const options = { method: method, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } };
         let bodyParams = new URLSearchParams();
         bodyParams.append('action', action);
-        
         if (method === 'GET') {
-            for (let [key, val] of Object.entries(params)) {
-                if (val !== undefined && val !== null) url += `&${encodeURIComponent(key)}=${encodeURIComponent(val)}`;
-            }
+            for (let [key, val] of Object.entries(params)) if (val !== undefined && val !== null) url += `&${encodeURIComponent(key)}=${encodeURIComponent(val)}`;
         } else {
-            for (let [key, val] of Object.entries(params)) {
-                if (val !== undefined && val !== null) bodyParams.append(key, val);
-            }
+            for (let [key, val] of Object.entries(params)) if (val !== undefined && val !== null) bodyParams.append(key, val);
             options.body = bodyParams.toString();
         }
-        
         try {
             const response = await fetch(method === 'GET' ? url : API_BASE, options);
-            const json = await response.json();
-            return json;
+            return await response.json();
         } catch (err) {
             console.error("API call failed", err);
             return { success: false, error: "Network error, please try again." };
         }
     }
-    
-    // ----- State management -----
+
     let currentCustomer = null;
     let loginPhone = "";
-    
     const appContainer = document.getElementById('dynamicContent');
-    
+
     function renderPhoneEntry() {
         appContainer.innerHTML = `
             <div>
-                <div class="alert" style="background:#eef2ff;">
-                    🔐 <strong>Loyalty login</strong><br>Enter your registered phone number to access points & purchase history.
-                </div>
-                <div class="form-group">
-                    <label>📱 Phone Number</label>
-                    <input type="tel" id="phoneInput" placeholder="e.g., 60123456789" value="${loginPhone}" autocomplete="off">
-                </div>
+                <div class="alert" style="background:#eef2ff;">🔐 <strong>Loyalty login</strong><br>Enter your registered phone number to access points & purchase history.</div>
+                <div class="form-group"><label>📱 Phone Number</label><input type="tel" id="phoneInput" placeholder="e.g., 60123456789" value="${loginPhone}" autocomplete="off"></div>
                 <button id="checkPhoneBtn">Continue →</button>
                 <div id="phoneMessage" class="alert hidden"></div>
-                <div class="text-center" style="margin-top:1rem; font-size:0.75rem; color:#5b6e8c;">
-                    Not registered? Ask store staff to add your phone during checkout.
-                </div>
+                <div class="text-center" style="margin-top:1rem; font-size:0.75rem; color:#5b6e8c;">Not registered? Ask store staff to add your phone during checkout.</div>
             </div>
         `;
         document.getElementById('checkPhoneBtn').addEventListener('click', checkCustomerStatus);
-        const inputField = document.getElementById('phoneInput');
-        if(inputField) inputField.focus();
+        document.getElementById('phoneInput').focus();
     }
-    
+
     function renderPasswordLogin(customerInfo) {
         appContainer.innerHTML = `
             <div>
                 <div class="success-box alert">👋 Welcome back, ${escapeHtml(customerInfo.name || 'Valued Customer')}!</div>
-                <div class="form-group">
-                    <label>🔑 Enter your password</label>
-                    <input type="password" id="loginPassword" placeholder="••••••" autocomplete="off">
-                </div>
+                <div class="form-group"><label>🔑 Enter your password</label><input type="password" id="loginPassword" placeholder="••••••" autocomplete="off"></div>
                 <button id="loginPasswordBtn">Login to Dashboard →</button>
                 <div id="pwdMessage" class="alert hidden"></div>
-                <hr>
-                <div class="text-center">
-                    <a id="forgotOrSetupLink" style="color:#3b82f6; cursor:pointer; font-size:0.8rem;">Forgot password? Contact store support</a>
-                </div>
+                <hr><div class="text-center"><a id="forgotOrSetupLink" style="color:#3b82f6; cursor:pointer; font-size:0.8rem;">Forgot password? Contact store support</a></div>
             </div>
         `;
         document.getElementById('loginPasswordBtn').addEventListener('click', () => performLogin(customerInfo));
-        const link = document.getElementById('forgotOrSetupLink');
-        if(link) link.addEventListener('click', () => { showMessage('pwdMessage', "Please ask store manager to reset your password.", false); });
+        document.getElementById('forgotOrSetupLink').addEventListener('click', () => showMessage('pwdMessage', "Please ask store manager to reset your password.", false));
     }
-    
+
     function renderSetPassword(customerInfo) {
         appContainer.innerHTML = `
             <div>
                 <div class="success-box alert">🎉 Welcome ${escapeHtml(customerInfo.name || 'Customer')}! You have ${customerInfo.points || 0} points waiting.</div>
                 <div class="alert" style="background:#fef9c3;">✨ First-time setup: Create a password to access your dashboard.</div>
-                <div class="form-group">
-                    <label>Create password</label>
-                    <input type="password" id="newPwd" placeholder="Min 4 characters" autocomplete="new-password">
-                </div>
-                <div class="form-group">
-                    <label>Confirm password</label>
-                    <input type="password" id="confirmPwd" placeholder="Re-enter password">
-                </div>
+                <div class="form-group"><label>Create password</label><input type="password" id="newPwd" placeholder="Min 4 characters" autocomplete="new-password"></div>
+                <div class="form-group"><label>Confirm password</label><input type="password" id="confirmPwd" placeholder="Re-enter password"></div>
                 <button id="setPwdBtn">Set Password & Enter →</button>
                 <div id="setPwdMessage" class="alert hidden"></div>
             </div>
         `;
         document.getElementById('setPwdBtn').addEventListener('click', () => registerNewPassword(customerInfo));
     }
-    
+
     function renderDashboard(customer, purchases = []) {
         const points = customer.points || 0;
         const name = customer.name || 'Guest';
@@ -383,236 +311,124 @@
             `<div class="text-center" style="padding:1rem; color:#64748b;">✨ No purchases found yet. Start shopping to see history!</div>` :
             purchases.map(p => `
                 <div class="purchase-item">
-                    <div class="product-info">
-                        <div class="product-name">${escapeHtml(p.product_name || 'Product')}</div>
-                        <div class="product-meta">📅 ${escapeHtml(p.purchase_date || p.timestamp || '—')} &nbsp;| &nbsp;Qty: ${p.quantity || 0}</div>
-                    </div>
+                    <div class="product-info"><div class="product-name">${escapeHtml(p.product_name || 'Product')}</div><div class="product-meta">📅 ${escapeHtml(p.purchase_date || p.timestamp || '—')} &nbsp;| &nbsp;Qty: ${p.quantity || 0}</div></div>
                     <div class="product-total">💰 ${(p.total || 0).toFixed(2)}</div>
                 </div>
             `).join('');
-        
         appContainer.innerHTML = `
             <div>
                 <div class="dashboard-section" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                    <div>
-                        <div class="welcome-msg">🌟 Hello, ${escapeHtml(name)}</div>
-                        <div class="points-label">YOUR REWARD POINTS</div>
-                        <div class="points-badge">${points} pts</div>
-                    </div>
+                    <div><div class="welcome-msg">🌟 Hello, ${escapeHtml(name)}</div><div class="points-label">YOUR REWARD POINTS</div><div class="points-badge">${points} pts</div></div>
                     <button id="changePwdDashboardBtn" class="secondary-btn" style="width:auto; padding:0.5rem 1rem;">🔐 Change Password</button>
                 </div>
-                
-                <div class="dashboard-section">
-                    <div style="font-weight:700; margin-bottom:0.5rem;">🛍️ Your Purchase History</div>
-                    <div class="history-list">
-                        ${purchaseHtml}
-                    </div>
-                </div>
-                
-                <div class="flex-btns">
-                    <button id="refreshHistoryBtn" class="secondary-btn">⟳ Refresh History</button>
-                    <button id="logoutBtn" class="danger-btn">🚪 Sign Out</button>
-                </div>
+                <div class="dashboard-section"><div style="font-weight:700; margin-bottom:0.5rem;">🛍️ Your Purchase History</div><div class="history-list">${purchaseHtml}</div></div>
+                <div class="flex-btns"><button id="refreshHistoryBtn" class="secondary-btn">⟳ Refresh History</button><button id="logoutBtn" class="danger-btn">🚪 Sign Out</button></div>
                 <div id="dashboardMsg" class="alert hidden"></div>
             </div>
         `;
-        
         document.getElementById('changePwdDashboardBtn').addEventListener('click', showChangePasswordModal);
-        document.getElementById('refreshHistoryBtn').addEventListener('click', () => refreshCustomerData());
+        document.getElementById('refreshHistoryBtn').addEventListener('click', refreshCustomerData);
         document.getElementById('logoutBtn').addEventListener('click', logout);
     }
-    
+
     function showChangePasswordModal() {
         if (!currentCustomer) return;
-        appContainer.innerHTML += `
+        const modalHtml = `
             <div id="changePwdOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;">
                 <div style="background:white; border-radius:2rem; max-width:90%; width:380px; padding:1.8rem; box-shadow:0 20px 35px rgba(0,0,0,0.2);">
                     <h3 style="margin-bottom:1rem;">Change Password</h3>
-                    <div class="form-group">
-                        <label>Current Password</label>
-                        <input type="password" id="oldPwdModal" placeholder="••••••">
-                    </div>
-                    <div class="form-group">
-                        <label>New Password</label>
-                        <input type="password" id="newPwdModal" placeholder="Min 4 characters">
-                    </div>
-                    <div class="form-group">
-                        <label>Confirm New Password</label>
-                        <input type="password" id="confirmPwdModal" placeholder="Re-enter">
-                    </div>
-                    <div style="display:flex; gap:10px; margin-top:0.5rem;">
-                        <button id="modalConfirmBtn" style="background:#1e2f3e;">Update</button>
-                        <button id="modalCancelBtn" class="secondary-btn">Cancel</button>
-                    </div>
+                    <div class="form-group"><label>Current Password</label><input type="password" id="oldPwdModal" placeholder="••••••"></div>
+                    <div class="form-group"><label>New Password</label><input type="password" id="newPwdModal" placeholder="Min 4 characters"></div>
+                    <div class="form-group"><label>Confirm New Password</label><input type="password" id="confirmPwdModal" placeholder="Re-enter"></div>
+                    <div style="display:flex; gap:10px; margin-top:0.5rem;"><button id="modalConfirmBtn" style="background:#1e2f3e;">Update</button><button id="modalCancelBtn" class="secondary-btn">Cancel</button></div>
                     <div id="modalMsg" style="font-size:0.8rem; margin-top:0.8rem; color:#b91c1c;"></div>
                 </div>
             </div>
         `;
+        appContainer.insertAdjacentHTML('beforeend', modalHtml);
         document.getElementById('modalConfirmBtn').addEventListener('click', async () => {
             const oldPwd = document.getElementById('oldPwdModal').value;
             const newPwd = document.getElementById('newPwdModal').value;
             const confirmPwd = document.getElementById('confirmPwdModal').value;
-            if (!oldPwd || !newPwd) {
-                document.getElementById('modalMsg').innerText = 'Please fill all fields.';
-                return;
-            }
-            if (newPwd !== confirmPwd) {
-                document.getElementById('modalMsg').innerText = 'New passwords do not match.';
-                return;
-            }
-            if (newPwd.length < 4) {
-                document.getElementById('modalMsg').innerText = 'Password must be at least 4 characters.';
-                return;
-            }
-            const result = await callApi('customerChangePassword', 'POST', {
-                phone: currentCustomer.phone,
-                old_password: oldPwd,
-                new_password: newPwd
-            });
+            if (!oldPwd || !newPwd) { document.getElementById('modalMsg').innerText = 'Please fill all fields.'; return; }
+            if (newPwd !== confirmPwd) { document.getElementById('modalMsg').innerText = 'New passwords do not match.'; return; }
+            if (newPwd.length < 4) { document.getElementById('modalMsg').innerText = 'Password must be at least 4 characters.'; return; }
+            const result = await callApi('customerChangePassword', 'POST', { phone: currentCustomer.phone, old_password: oldPwd, new_password: newPwd });
             if (result.success) {
                 document.getElementById('modalMsg').style.color = '#15803d';
                 document.getElementById('modalMsg').innerText = '✅ Password updated!';
-                setTimeout(() => {
-                    const overlay = document.getElementById('changePwdOverlay');
-                    if(overlay) overlay.remove();
-                    showMessage('dashboardMsg', 'Password changed successfully', true);
-                }, 1200);
+                setTimeout(() => { document.getElementById('changePwdOverlay')?.remove(); showMessage('dashboardMsg', 'Password changed successfully', true); }, 1200);
             } else {
                 document.getElementById('modalMsg').innerText = result.error || 'Update failed.';
             }
         });
-        document.getElementById('modalCancelBtn').addEventListener('click', () => {
-            const overlay = document.getElementById('changePwdOverlay');
-            if(overlay) overlay.remove();
-        });
+        document.getElementById('modalCancelBtn').addEventListener('click', () => document.getElementById('changePwdOverlay')?.remove());
     }
-    
+
     function showMessage(elementId, text, isSuccess = false) {
         const el = document.getElementById(elementId);
-        if(el) {
+        if (el) {
             el.innerText = text;
             el.classList.remove('hidden', 'error-box', 'success-box');
             el.classList.add(isSuccess ? 'success-box' : 'error-box');
             setTimeout(() => el.classList.add('hidden'), 4000);
         }
     }
-    
+
     async function checkCustomerStatus() {
-        const phoneInput = document.getElementById('phoneInput');
-        const phone = phoneInput.value.trim();
-        if(!phone) {
-            showMessage('phoneMessage', 'Please enter phone number.', false);
-            return;
-        }
-        if(!/^[\d+\-\s]{6,15}$/.test(phone) && phone.length < 5) {
-            showMessage('phoneMessage', 'Enter a valid phone number.', false);
-            return;
-        }
+        const phone = document.getElementById('phoneInput').value.trim();
+        if (!phone) { showMessage('phoneMessage', 'Please enter phone number.', false); return; }
+        if (!/^[\d+\-\s]{6,15}$/.test(phone) && phone.length < 5) { showMessage('phoneMessage', 'Enter a valid phone number.', false); return; }
         loginPhone = phone;
         showMessage('phoneMessage', 'Checking...', true);
         try {
-            const res = await callApi('customerStatus', 'GET', { phone: phone });
-            if(!res.success) {
-                showMessage('phoneMessage', res.error || 'Customer not registered. Please register at store.', false);
-                return;
-            }
-            const customerInfo = res.customer;
-            const hasPassword = res.hasPassword || false;
-            if(hasPassword) {
-                renderPasswordLogin(customerInfo);
-            } else {
-                renderSetPassword(customerInfo);
-            }
-        } catch(e) {
-            showMessage('phoneMessage', 'Service error. Please try again later.', false);
-        }
+            const res = await callApi('customerStatus', 'GET', { phone });
+            if (!res.success) { showMessage('phoneMessage', res.error || 'Customer not registered. Please register at store.', false); return; }
+            if (res.hasPassword) renderPasswordLogin(res.customer);
+            else renderSetPassword(res.customer);
+        } catch(e) { showMessage('phoneMessage', 'Service error. Please try again later.', false); }
     }
-    
+
     async function performLogin(customerInfo) {
         const password = document.getElementById('loginPassword').value;
-        if(!password) {
-            showMessage('pwdMessage', 'Password required.', false);
-            return;
-        }
-        const res = await callApi('customerLogin', 'POST', {
-            phone: customerInfo.phone,
-            password: password
-        });
-        if(res.success && res.customer) {
-            currentCustomer = res.customer;
-            await loadPurchasesAndShowDashboard();
-        } else {
-            showMessage('pwdMessage', res.error || 'Invalid password.', false);
-        }
+        if (!password) { showMessage('pwdMessage', 'Password required.', false); return; }
+        const res = await callApi('customerLogin', 'POST', { phone: customerInfo.phone, password });
+        if (res.success && res.customer) { currentCustomer = res.customer; await loadPurchasesAndShowDashboard(); }
+        else showMessage('pwdMessage', res.error || 'Invalid password.', false);
     }
-    
+
     async function registerNewPassword(customerInfo) {
         const newPwd = document.getElementById('newPwd').value;
         const confirmPwd = document.getElementById('confirmPwd').value;
-        if(newPwd.length < 4) {
-            showMessage('setPwdMessage', 'Password must be at least 4 characters.', false);
-            return;
-        }
-        if(newPwd !== confirmPwd) {
-            showMessage('setPwdMessage', 'Passwords do not match.', false);
-            return;
-        }
-        const res = await callApi('customerSetPassword', 'POST', {
-            phone: customerInfo.phone,
-            password: newPwd
-        });
-        if(res.success) {
-            currentCustomer = res.customer;
-            await loadPurchasesAndShowDashboard();
-        } else {
-            showMessage('setPwdMessage', res.error || 'Failed to set password.', false);
-        }
+        if (newPwd.length < 4) { showMessage('setPwdMessage', 'Password must be at least 4 characters.', false); return; }
+        if (newPwd !== confirmPwd) { showMessage('setPwdMessage', 'Passwords do not match.', false); return; }
+        const res = await callApi('customerSetPassword', 'POST', { phone: customerInfo.phone, password: newPwd });
+        if (res.success) { currentCustomer = res.customer; await loadPurchasesAndShowDashboard(); }
+        else showMessage('setPwdMessage', res.error || 'Failed to set password.', false);
     }
-    
+
     async function loadPurchasesAndShowDashboard() {
-        if(!currentCustomer) return;
-        const purchasesRes = await callApi('getCustomerPurchases', 'GET', { customer_id: currentCustomer.id });
-        let purchases = [];
-        if(purchasesRes.success && purchasesRes.purchases) {
-            purchases = purchasesRes.purchases;
-        } else if(purchasesRes.error) {
-            console.warn(purchasesRes.error);
-        }
-        renderDashboard(currentCustomer, purchases);
+        if (!currentCustomer) return;
+        const res = await callApi('getCustomerPurchases', 'GET', { customer_id: currentCustomer.id });
+        renderDashboard(currentCustomer, res.success ? (res.purchases || []) : []);
     }
-    
+
     async function refreshCustomerData() {
-        if(!currentCustomer) return;
+        if (!currentCustomer) return;
         const statusRes = await callApi('customerStatus', 'GET', { phone: currentCustomer.phone });
-        if(statusRes.success && statusRes.customer) {
+        if (statusRes.success && statusRes.customer) {
             currentCustomer.points = statusRes.customer.points;
             currentCustomer.name = statusRes.customer.name;
         }
         const purchasesRes = await callApi('getCustomerPurchases', 'GET', { customer_id: currentCustomer.id });
-        let purchases = purchasesRes.success ? purchasesRes.purchases : [];
-        renderDashboard(currentCustomer, purchases);
+        renderDashboard(currentCustomer, purchasesRes.success ? (purchasesRes.purchases || []) : []);
         showMessage('dashboardMsg', '✅ Data refreshed', true);
     }
-    
-    function logout() {
-        currentCustomer = null;
-        loginPhone = "";
-        renderPhoneEntry();
-    }
-    
-    function escapeHtml(str) {
-        if(!str) return '';
-        return String(str).replace(/[&<>]/g, function(m) {
-            if(m === '&') return '&amp;';
-            if(m === '<') return '&lt;';
-            if(m === '>') return '&gt;';
-            return m;
-        });
-    }
-    
-    // Initial load
+
+    function logout() { currentCustomer = null; loginPhone = ""; renderPhoneEntry(); }
+    function escapeHtml(str) { if (!str) return ''; return String(str).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+
     renderPhoneEntry();
-    console.log("Customer portal ready. Connected to backend: " + API_BASE);
 </script>
 </body>
 </html>
