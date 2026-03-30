@@ -21,7 +21,6 @@
             padding: 1.5rem;
         }
 
-        /* Main card container */
         .portal-card {
             max-width: 620px;
             width: 100%;
@@ -30,10 +29,8 @@
             border-radius: 2.5rem;
             box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25), 0 8px 18px rgba(0, 0, 0, 0.05);
             overflow: hidden;
-            transition: all 0.2s ease;
         }
 
-        /* header area */
         .brand-header {
             background: #1e2f3e;
             padding: 1.8rem 2rem;
@@ -57,7 +54,6 @@
             padding: 2rem 2rem 2rem 2rem;
         }
 
-        /* forms & containers */
         .form-group {
             margin-bottom: 1.3rem;
         }
@@ -68,7 +64,6 @@
             font-size: 0.85rem;
             margin-bottom: 0.45rem;
             color: #1e2f3e;
-            letter-spacing: -0.2px;
         }
 
         input {
@@ -99,7 +94,6 @@
             transition: 0.2s;
             width: 100%;
             margin-top: 0.5rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         button:hover {
@@ -111,7 +105,6 @@
             background: #eef2ff;
             color: #1e2f3e;
             border: 1px solid #cbd5e1;
-            box-shadow: none;
         }
 
         .secondary-btn:hover {
@@ -167,7 +160,6 @@
             font-weight: 700;
             font-size: 1.3rem;
             color: #2c2c2c;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
         }
 
         .points-label {
@@ -194,7 +186,6 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            transition: 0.1s;
         }
 
         .product-info {
@@ -254,19 +245,6 @@
             margin-bottom: 1rem;
         }
 
-        .logout-link {
-            text-align: right;
-            font-size: 0.8rem;
-            margin-top: 1rem;
-        }
-
-        .logout-link a {
-            color: #3b82f6;
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
         footer {
             background: #f1f5f9;
             padding: 1rem;
@@ -283,7 +261,6 @@
         <p>Earn points | Track purchases | Exclusive benefits</p>
     </div>
     <div class="content-pane" id="dynamicContent">
-        <!-- dynamic views: login / set password / dashboard -->
         <div id="loadingView" class="text-center" style="padding: 2rem;">
             <span>Loading secure portal...</span>
         </div>
@@ -294,16 +271,11 @@
 </div>
 
 <script>
-    // ----------------------------- CONFIGURATION ---------------------------------
-    // Google Apps Script Web App URL (set your deployment URL)
-    // IMPORTANT: Replace with your actual published web app URL (doGet/doPost endpoint)
-    const API_BASE = window.location.origin + window.location.pathname;  // works when HTML is served from same Apps Script web app
-    // If you serve this HTML independently, set the full endpoint e.g. "https://script.google.com/macros/s/YOUR_ID/exec"
-    // For embedded web app, we can use relative path.
-    
+    // ==================== BACKEND URL (YOUR APPS SCRIPT WEB APP) ====================
+    const API_BASE = "https://script.google.com/macros/s/AKfycbxeXlDy7Bo-BpGuHRhNx-YU9jldr7Jf7H1RmvuJ29wRgB0xNtMsl0NOno0pervg0QQGOg/exec";
+
     // Helper: universal request to backend (supports GET/POST)
     async function callApi(action, method = 'GET', params = {}) {
-        // Build URL parameters for GET
         let url = `${API_BASE}?action=${action}`;
         const options = {
             method: method,
@@ -336,13 +308,11 @@
     }
     
     // ----- State management -----
-    let currentCustomer = null;   // stores id, phone, name, points
-    let loginPhone = "";          // phone entered in initial step
+    let currentCustomer = null;
+    let loginPhone = "";
     
-    // DOM element references
     const appContainer = document.getElementById('dynamicContent');
     
-    // Helper: render UI based on step
     function renderPhoneEntry() {
         appContainer.innerHTML = `
             <div>
@@ -365,7 +335,6 @@
         if(inputField) inputField.focus();
     }
     
-    // step 2A: show password login (if password already set)
     function renderPasswordLogin(customerInfo) {
         appContainer.innerHTML = `
             <div>
@@ -387,7 +356,6 @@
         if(link) link.addEventListener('click', () => { showMessage('pwdMessage', "Please ask store manager to reset your password.", false); });
     }
     
-    // step 2B: set new password (first time)
     function renderSetPassword(customerInfo) {
         appContainer.innerHTML = `
             <div>
@@ -408,7 +376,6 @@
         document.getElementById('setPwdBtn').addEventListener('click', () => registerNewPassword(customerInfo));
     }
     
-    // Dashboard: show points + purchase history + change password option
     function renderDashboard(customer, purchases = []) {
         const points = customer.points || 0;
         const name = customer.name || 'Guest';
@@ -455,7 +422,6 @@
         document.getElementById('logoutBtn').addEventListener('click', logout);
     }
     
-    // change password modal (simple inline)
     function showChangePasswordModal() {
         if (!currentCustomer) return;
         appContainer.innerHTML += `
@@ -521,7 +487,6 @@
         });
     }
     
-    // helper UI messages
     function showMessage(elementId, text, isSuccess = false) {
         const el = document.getElementById(elementId);
         if(el) {
@@ -532,8 +497,6 @@
         }
     }
     
-    // ---------- API interactions (Backend calls) ----------
-    // check customer existence & password status
     async function checkCustomerStatus() {
         const phoneInput = document.getElementById('phoneInput');
         const phone = phoneInput.value.trim();
@@ -541,7 +504,6 @@
             showMessage('phoneMessage', 'Please enter phone number.', false);
             return;
         }
-        // basic validation
         if(!/^[\d+\-\s]{6,15}$/.test(phone) && phone.length < 5) {
             showMessage('phoneMessage', 'Enter a valid phone number.', false);
             return;
@@ -554,14 +516,11 @@
                 showMessage('phoneMessage', res.error || 'Customer not registered. Please register at store.', false);
                 return;
             }
-            // customer exists
             const customerInfo = res.customer;
             const hasPassword = res.hasPassword || false;
             if(hasPassword) {
-                // show login with password
                 renderPasswordLogin(customerInfo);
             } else {
-                // first time, set password
                 renderSetPassword(customerInfo);
             }
         } catch(e) {
@@ -612,7 +571,6 @@
     
     async function loadPurchasesAndShowDashboard() {
         if(!currentCustomer) return;
-        // fetch purchase history using customer id
         const purchasesRes = await callApi('getCustomerPurchases', 'GET', { customer_id: currentCustomer.id });
         let purchases = [];
         if(purchasesRes.success && purchasesRes.purchases) {
@@ -625,7 +583,6 @@
     
     async function refreshCustomerData() {
         if(!currentCustomer) return;
-        // re-fetch latest points from server
         const statusRes = await callApi('customerStatus', 'GET', { phone: currentCustomer.phone });
         if(statusRes.success && statusRes.customer) {
             currentCustomer.points = statusRes.customer.points;
@@ -650,17 +607,12 @@
             if(m === '<') return '&lt;';
             if(m === '>') return '&gt;';
             return m;
-        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-            return c;
         });
     }
     
-    // initial load
+    // Initial load
     renderPhoneEntry();
-    
-    // ---- ensure we also have automatic redirection on missing backend endpoints? but we added detailed backend code description ----
-    // Additional note: the HTML is fully functional if backend implements required endpoints
-    console.log("Customer portal ready. Backend must support: customerStatus, customerLogin, customerSetPassword, customerChangePassword, getCustomerPurchases");
+    console.log("Customer portal ready. Connected to backend: " + API_BASE);
 </script>
 </body>
 </html>
