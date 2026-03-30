@@ -409,24 +409,45 @@
 
     async function loadPurchasesAndShowDashboard() {
         if (!currentCustomer) return;
-        const res = await callApi('getCustomerPurchases', 'GET', { customer_id: currentCustomer.id });
+        const customerIdSnapshot = currentCustomer.id;
+        const res = await callApi('getCustomerPurchases', 'GET', { customer_id: customerIdSnapshot });
+        // After await, ensure we still have the same customer (no logout in between)
+        if (!currentCustomer || currentCustomer.id !== customerIdSnapshot) return;
         renderDashboard(currentCustomer, res.success ? (res.purchases || []) : []);
     }
 
+    // FIXED: Added safety checks after each await to prevent race conditions
     async function refreshCustomerData() {
         if (!currentCustomer) return;
-        const statusRes = await callApi('customerStatus', 'GET', { phone: currentCustomer.phone });
+        const phoneSnapshot = currentCustomer.phone;
+        const idSnapshot = currentCustomer.id;
+
+        const statusRes = await callApi('customerStatus', 'GET', { phone: phoneSnapshot });
+        // If customer was logged out during the API call, abort
+        if (!currentCustomer || currentCustomer.phone !== phoneSnapshot) return;
+
         if (statusRes.success && statusRes.customer) {
             currentCustomer.points = statusRes.customer.points;
             currentCustomer.name = statusRes.customer.name;
         }
-        const purchasesRes = await callApi('getCustomerPurchases', 'GET', { customer_id: currentCustomer.id });
+
+        const purchasesRes = await callApi('getCustomerPurchases', 'GET', { customer_id: idSnapshot });
+        if (!currentCustomer || currentCustomer.id !== idSnapshot) return;
+
         renderDashboard(currentCustomer, purchasesRes.success ? (purchasesRes.purchases || []) : []);
         showMessage('dashboardMsg', '✅ Data refreshed', true);
     }
 
-    function logout() { currentCustomer = null; loginPhone = ""; renderPhoneEntry(); }
-    function escapeHtml(str) { if (!str) return ''; return String(str).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+    function logout() {
+        currentCustomer = null;
+        loginPhone = "";
+        renderPhoneEntry();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    }
 
     renderPhoneEntry();
 </script>
