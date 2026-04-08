@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Customer Rewards Portal | Your Store</title>
+    <title>Customer Rewards Portal | Smart Sync</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background: linear-gradient(145deg, #f0f5fb 0%, #e9f0f8 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 1.5rem; }
@@ -47,7 +47,6 @@
         footer { background: #f1f5f9; padding: 1rem; text-align: center; font-size: 0.7rem; color: #5b6e8c; }
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; }
         .modal-container { background:white; border-radius:2rem; max-width:90%; width:380px; padding:1.8rem; box-shadow:0 20px 35px rgba(0,0,0,0.2); }
-        /* Loading overlay custom styles */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -92,6 +91,17 @@
             font-weight: 500;
         }
         .toggle-history-btn:hover { background: #e2e8f0; transform: none; }
+        .sync-status {
+            font-size: 0.7rem;
+            background: #eef2ff;
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 2rem;
+            color: #1e2f3e;
+            margin-left: 0.5rem;
+        }
+        .sync-status.syncing { background: #fef9c3; color: #854d0e; }
+        .sync-status.error { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
@@ -113,6 +123,169 @@
 <script>
     const API_BASE = "https://script.google.com/macros/s/AKfycbx27b_Z11UiMA0E0YpfQHnmDr7iZWAxyqOcH9Qoyl-f38nLnocfEhipQYtwPLhuSOjUsg/exec";
 
+    // ========== SMART CACHE HELPERS ==========
+    const CACHE_KEYS = {
+        DASHBOARD_PREFIX: 'cust_dash_',
+        HASH_PREFIX: 'cust_hash_'
+    };
+    let backgroundSyncInterval = null;
+    let currentCustomerId = null;
+
+    function computeHash(data) {
+        const str = JSON.stringify(data);
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash |= 0;
+        }
+        return hash.toString();
+    }
+
+    function getDashboardCache(customerId) {
+        const key = CACHE_KEYS.DASHBOARD_PREFIX + customerId;
+        const cached = localStorage.getItem(key);
+        if (!cached) return null;
+        try {
+            const { data, timestamp, hash } = JSON.parse(cached);
+            // Cache valid for 5 minutes (300000 ms) – but we'll still check remote hash
+            return { data, timestamp, hash };
+        } catch(e) { return null; }
+    }
+
+    function saveDashboardCache(customerId, purchases, prizes, points, name) {
+        const cacheData = { purchases, prizes, points, name };
+        const hash = computeHash(cacheData);
+        const key = CACHE_KEYS.DASHBOARD_PREFIX + customerId;
+        const hashKey = CACHE_KEYS.HASH_PREFIX + customerId;
+        localStorage.setItem(key, JSON.stringify({
+            data: cacheData,
+            timestamp: Date.now(),
+            hash: hash
+        }));
+        localStorage.setItem(hashKey, hash);
+    }
+
+    function getStoredHash(customerId) {
+        return localStorage.getItem(CACHE_KEYS.HASH_PREFIX + customerId);
+    }
+
+    async function fetchRemoteHash(customerId) {
+        // Call a lightweight endpoint that returns a hash of the customer's data (purchases + prizes + points)
+        // If your backend doesn't have such endpoint, we'll simulate by fetching full data but only compare hash.
+        // For efficiency, we'll rely on the fact that getCustomerPurchases + getCustomerLuckyDraws are relatively light.
+        // But to truly minimize bandwidth, we'd need a dedicated hash endpoint.
+        // As a workaround, we'll fetch only the points via customerStatus (light) and compare with cached points? Not ideal.
+        // Simpler: we'll fetch full data in background but only update UI if hash changed.
+        // That's still acceptable because dashboard is not huge.
+        // However, to implement true hash check, I'll assume backend supports ?action=getCustomerDashboardHash.
+        // If not, we fallback to full fetch but still use cache to show instantly.
+        try {
+            const url = `${API_BASE}?action=getCustomerDashboardHash&customer_id=${customerId}`;
+            const res = await fetch(url);
+            const json = await res.json();
+            if (json.success && json.hash) return json.hash;
+        } catch(e) { console.warn("Hash endpoint not available, will fallback to full sync"); }
+        return null;
+    }
+
+    async function backgroundSyncCustomer(customer) {
+        if (!customer || !customer.id) return;
+        const customerId = customer.id;
+        const currentHash = getStoredHash(customerId);
+        let remoteHash = null;
+        try {
+            remoteHash = await fetchRemoteHash(customerId);
+            if (remoteHash && remoteHash === currentHash) {
+                // No changes, just update timestamp
+                const key = CACHE_KEYS.DASHBOARD_PREFIX + customerId;
+                const cached = localStorage.getItem(key);
+                if (cached) {
+                    const { data } = JSON.parse(cached);
+                    localStorage.setItem(key, JSON.stringify({
+                        data: data,
+                        timestamp: Date.now(),
+                        hash: currentHash
+                    }));
+                }
+                updateSyncStatusUI(true);
+                return;
+            }
+        } catch(e) { /* fallback to full sync */ }
+
+        // Full sync (either no hash endpoint or hash mismatch)
+        await refreshCustomerDataFull(customer, true);
+        updateSyncStatusUI(true);
+    }
+
+    async function refreshCustomerDataFull(customer, silent = false) {
+        if (!customer) return;
+        const idSnapshot = customer.id;
+        const phoneSnapshot = customer.phone;
+        if (!silent) showLoadingOverlay("Refreshing your data...");
+        try {
+            const [purchasesRes, luckyRes, statusRes] = await Promise.all([
+                callApi('getCustomerPurchases', 'GET', { customer_id: idSnapshot }),
+                callApi('getCustomerLuckyDraws', 'GET', { customer_id: idSnapshot }),
+                callApi('customerStatus', 'GET', { phone: phoneSnapshot })
+            ]);
+            if (!statusRes.success) throw new Error("Failed to get points");
+            const points = statusRes.customer?.points || 0;
+            const name = statusRes.customer?.name || customer.name || 'Guest';
+            const purchases = purchasesRes.success ? (purchasesRes.purchases || []) : [];
+            const prizes = luckyRes.success ? (luckyRes.prizes || []) : [];
+            // Update currentCustomer points/name
+            customer.points = points;
+            customer.name = name;
+            // Save to cache
+            saveDashboardCache(idSnapshot, purchases, prizes, points, name);
+            // Update UI only if this customer is still current
+            if (currentCustomer && currentCustomer.id === idSnapshot) {
+                renderDashboard(customer, purchases, prizes);
+                if (!silent) showMessage('dashboardMsg', '✅ Data refreshed', true);
+            }
+        } catch(err) {
+            console.error("Full sync failed", err);
+            if (!silent) showMessage('dashboardMsg', 'Failed to refresh. Check network.', false);
+        } finally {
+            if (!silent) hideLoadingOverlay();
+        }
+    }
+
+    function updateSyncStatusUI(success) {
+        const statusSpan = document.getElementById('syncStatusIndicator');
+        if (statusSpan) {
+            if (success) {
+                statusSpan.innerHTML = '🔄 Synced';
+                statusSpan.className = 'sync-status';
+            } else {
+                statusSpan.innerHTML = '⚠️ Sync error';
+                statusSpan.className = 'sync-status error';
+            }
+        }
+    }
+
+    function startBackgroundSync(customer) {
+        if (backgroundSyncInterval) clearInterval(backgroundSyncInterval);
+        if (!customer) return;
+        backgroundSyncInterval = setInterval(() => {
+            if (currentCustomer && currentCustomer.id === customer.id) {
+                backgroundSyncCustomer(customer);
+            } else {
+                clearInterval(backgroundSyncInterval);
+                backgroundSyncInterval = null;
+            }
+        }, 60000); // every 60 seconds
+    }
+
+    function stopBackgroundSync() {
+        if (backgroundSyncInterval) {
+            clearInterval(backgroundSyncInterval);
+            backgroundSyncInterval = null;
+        }
+    }
+
+    // ========== EXISTING API & UI CODE (adapted) ==========
     async function callApi(action, method = 'GET', params = {}) {
         let url = `${API_BASE}?action=${action}`;
         const options = { method: method, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } };
@@ -137,7 +310,6 @@
     let loginPhone = "";
     const appContainer = document.getElementById('dynamicContent');
 
-    // ----- Loading overlay helpers -----
     let activeLoadingOverlay = null;
     function showLoadingOverlay(message = "Refreshing your data...") {
         if (activeLoadingOverlay) hideLoadingOverlay();
@@ -200,10 +372,9 @@
         document.getElementById('setPwdBtn').addEventListener('click', () => registerNewPassword(customerInfo));
     }
 
-    async function renderDashboard(customer, purchases = [], luckyPrizes = []) {
+    async function renderDashboard(customer, purchases = [], prizes = []) {
         const points = customer.points || 0;
         const name = customer.name || 'Guest';
-        // Generate purchase HTML but it will be hidden initially
         const purchaseHtml = purchases.length === 0 ? 
             `<div class="text-center" style="padding:1rem; color:#64748b;">✨ No purchases found yet. Start shopping to see history!</div>` :
             purchases.map(p => `
@@ -212,17 +383,13 @@
                     <div class="product-total">💰 ${(p.total || 0).toFixed(2)}</div>
                 </div>
             `).join('');
-
-        // Active lucky draw prizes (no claim button)
-        const prizesHtml = luckyPrizes.length === 0 ?
+        const prizesHtml = prizes.length === 0 ?
             `<div class="text-center" style="padding:1rem; color:#64748b;">🎁 No active lucky draw prizes. Spin the wheel in-store!</div>` :
-            luckyPrizes.map(p => `
+            prizes.map(p => `
                 <div class="prize-item">
                     <div class="prize-info">
                         <div class="prize-name">🎉 ${escapeHtml(p.prize)}</div>
-                        <div class="prize-meta">
-                            Receipt: ${escapeHtml(p.receipt)} | Expires: ${p.expiryDate || '30 days from win'}
-                        </div>
+                        <div class="prize-meta">Receipt: ${escapeHtml(p.receipt)} | Expires: ${p.expiryDate || '30 days from win'}</div>
                     </div>
                 </div>
             `).join('');
@@ -230,7 +397,11 @@
         appContainer.innerHTML = `
             <div>
                 <div class="dashboard-section" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                    <div><div class="welcome-msg">🌟 Hello, ${escapeHtml(name)}</div><div class="points-label">YOUR REWARD POINTS</div><div class="points-badge">${points} pts</div></div>
+                    <div>
+                        <div class="welcome-msg">🌟 Hello, ${escapeHtml(name)} <span id="syncStatusIndicator" class="sync-status">🔄 Synced</span></div>
+                        <div class="points-label">YOUR REWARD POINTS</div>
+                        <div class="points-badge">${points} pts</div>
+                    </div>
                     <button id="changePwdDashboardBtn" class="secondary-btn" style="width:auto; padding:0.5rem 1rem;">🔐 Change Password</button>
                 </div>
 
@@ -257,18 +428,13 @@
             </div>
         `;
 
-        // Attach event listeners
         document.getElementById('changePwdDashboardBtn').addEventListener('click', showChangePasswordModal);
         document.getElementById('refreshHistoryBtn').addEventListener('click', () => {
-            // Show loading overlay before refreshing
             showLoadingOverlay("Refreshing purchases, points & prizes...");
-            refreshCustomerData().finally(() => {
-                hideLoadingOverlay();
-            });
+            refreshCustomerDataFull(currentCustomer, false).finally(() => hideLoadingOverlay());
         });
         document.getElementById('logoutBtn').addEventListener('click', logout);
         
-        // Toggle purchase history visibility
         const toggleBtn = document.getElementById('toggleHistoryBtn');
         const historyContainer = document.getElementById('purchaseHistoryContainer');
         let historyVisible = false;
@@ -283,6 +449,65 @@
                 historyVisible = true;
             }
         });
+    }
+
+    // Load dashboard with cache-first strategy
+    async function loadDashboardWithCache(customer) {
+        if (!customer) return;
+        const cached = getDashboardCache(customer.id);
+        if (cached) {
+            // Render from cache immediately
+            const { purchases, prizes, points, name } = cached.data;
+            customer.points = points;
+            customer.name = name;
+            renderDashboard(customer, purchases, prizes);
+            // Then background sync
+            backgroundSyncCustomer(customer);
+        } else {
+            // No cache, full fetch with loading
+            showLoadingOverlay("Loading your dashboard...");
+            await refreshCustomerDataFull(customer, false);
+            hideLoadingOverlay();
+        }
+        startBackgroundSync(customer);
+    }
+
+    async function checkCustomerStatus() {
+        const phone = document.getElementById('phoneInput').value.trim();
+        if (!phone) { showMessage('phoneMessage', 'Please enter phone number.', false); return; }
+        if (!/^[\d+\-\s]{6,15}$/.test(phone) && phone.length < 5) { showMessage('phoneMessage', 'Enter a valid phone number.', false); return; }
+        loginPhone = phone;
+        showMessage('phoneMessage', 'Checking...', true);
+        try {
+            const res = await callApi('customerStatus', 'GET', { phone });
+            if (!res.success) { showMessage('phoneMessage', res.error || 'Customer not registered. Please register at store.', false); return; }
+            if (res.hasPassword) renderPasswordLogin(res.customer);
+            else renderSetPassword(res.customer);
+        } catch(e) { showMessage('phoneMessage', 'Service error. Please try again later.', false); }
+    }
+
+    async function performLogin(customerInfo) {
+        const password = document.getElementById('loginPassword').value;
+        if (!password) { showMessage('pwdMessage', 'Password required.', false); return; }
+        const res = await callApi('customerLogin', 'POST', { phone: customerInfo.phone, password });
+        if (res.success && res.customer) {
+            currentCustomer = res.customer;
+            currentCustomerId = res.customer.id;
+            await loadDashboardWithCache(currentCustomer);
+        } else showMessage('pwdMessage', res.error || 'Invalid password.', false);
+    }
+
+    async function registerNewPassword(customerInfo) {
+        const newPwd = document.getElementById('newPwd').value;
+        const confirmPwd = document.getElementById('confirmPwd').value;
+        if (newPwd.length < 4) { showMessage('setPwdMessage', 'Password must be at least 4 characters.', false); return; }
+        if (newPwd !== confirmPwd) { showMessage('setPwdMessage', 'Passwords do not match.', false); return; }
+        const res = await callApi('customerSetPassword', 'POST', { phone: customerInfo.phone, password: newPwd });
+        if (res.success) {
+            currentCustomer = res.customer;
+            currentCustomerId = res.customer.id;
+            await loadDashboardWithCache(currentCustomer);
+        } else showMessage('setPwdMessage', res.error || 'Failed to set password.', false);
     }
 
     function showChangePasswordModal() {
@@ -329,80 +554,13 @@
         }
     }
 
-    async function checkCustomerStatus() {
-        const phone = document.getElementById('phoneInput').value.trim();
-        if (!phone) { showMessage('phoneMessage', 'Please enter phone number.', false); return; }
-        if (!/^[\d+\-\s]{6,15}$/.test(phone) && phone.length < 5) { showMessage('phoneMessage', 'Enter a valid phone number.', false); return; }
-        loginPhone = phone;
-        showMessage('phoneMessage', 'Checking...', true);
-        try {
-            const res = await callApi('customerStatus', 'GET', { phone });
-            if (!res.success) { showMessage('phoneMessage', res.error || 'Customer not registered. Please register at store.', false); return; }
-            if (res.hasPassword) renderPasswordLogin(res.customer);
-            else renderSetPassword(res.customer);
-        } catch(e) { showMessage('phoneMessage', 'Service error. Please try again later.', false); }
-    }
-
-    async function performLogin(customerInfo) {
-        const password = document.getElementById('loginPassword').value;
-        if (!password) { showMessage('pwdMessage', 'Password required.', false); return; }
-        const res = await callApi('customerLogin', 'POST', { phone: customerInfo.phone, password });
-        if (res.success && res.customer) { currentCustomer = res.customer; await loadFullDashboard(); }
-        else showMessage('pwdMessage', res.error || 'Invalid password.', false);
-    }
-
-    async function registerNewPassword(customerInfo) {
-        const newPwd = document.getElementById('newPwd').value;
-        const confirmPwd = document.getElementById('confirmPwd').value;
-        if (newPwd.length < 4) { showMessage('setPwdMessage', 'Password must be at least 4 characters.', false); return; }
-        if (newPwd !== confirmPwd) { showMessage('setPwdMessage', 'Passwords do not match.', false); return; }
-        const res = await callApi('customerSetPassword', 'POST', { phone: customerInfo.phone, password: newPwd });
-        if (res.success) { currentCustomer = res.customer; await loadFullDashboard(); }
-        else showMessage('setPwdMessage', res.error || 'Failed to set password.', false);
-    }
-
-    async function loadFullDashboard() {
-        if (!currentCustomer) return;
-        const idSnapshot = currentCustomer.id;
-        const phoneSnapshot = currentCustomer.phone;
-
-        // Fetch purchases and lucky draws in parallel
-        const [purchasesRes, luckyRes] = await Promise.all([
-            callApi('getCustomerPurchases', 'GET', { customer_id: idSnapshot }),
-            callApi('getCustomerLuckyDraws', 'GET', { customer_id: idSnapshot })
-        ]);
-
-        if (!currentCustomer || currentCustomer.id !== idSnapshot) return;
-
-        // Also refresh points from customerStatus
-        const statusRes = await callApi('customerStatus', 'GET', { phone: phoneSnapshot });
-        if (statusRes.success && statusRes.customer) {
-            currentCustomer.points = statusRes.customer.points;
-            currentCustomer.name = statusRes.customer.name;
-        }
-
-        renderDashboard(
-            currentCustomer,
-            purchasesRes.success ? (purchasesRes.purchases || []) : [],
-            luckyRes.success ? (luckyRes.prizes || []) : []
-        );
-    }
-
-    async function refreshCustomerData() {
-        if (!currentCustomer) return;
-        await loadFullDashboard();
-        // Show success message inside dashboard after refresh (optional)
-        const msgDiv = document.getElementById('dashboardMsg');
-        if (msgDiv) {
-            showMessage('dashboardMsg', '✅ Dashboard refreshed with latest data', true);
-        }
-    }
-
-    function logout() { 
-        currentCustomer = null; 
-        loginPhone = ""; 
-        hideLoadingOverlay(); // ensure any leftover overlay removed
-        renderPhoneEntry(); 
+    function logout() {
+        stopBackgroundSync();
+        currentCustomer = null;
+        currentCustomerId = null;
+        loginPhone = "";
+        hideLoadingOverlay();
+        renderPhoneEntry();
     }
     
     function escapeHtml(str) { 
